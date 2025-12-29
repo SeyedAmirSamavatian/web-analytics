@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Use environment variable or default to relative path
+// In production, set VITE_API_URL to your backend URL (e.g., https://api.monitorsite.info)
+// If not set, it will use relative paths which work with proxy in development
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,

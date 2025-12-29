@@ -7,8 +7,11 @@ import { Site, DashboardStats } from '../types';
 import SiteSettings from '../components/SiteSettings';
 import AnalyticsView from '../components/AnalyticsView';
 import toast from 'react-hot-toast';
+import { useTranslation } from '../i18n/i18n';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { user, logout } = useAuthStore();
   const [sites, setSites] = useState<Site[]>([]);
   const [selectedSite, setSelectedSite] = useState<Site | null>(null);
@@ -34,7 +37,7 @@ export default function Dashboard() {
         setSelectedSite(response.sites[0]);
       }
     } catch (error: any) {
-      toast.error('Failed to load sites');
+      toast.error(t('dashboard.failedToLoadSites'));
     } finally {
       setLoading(false);
     }
@@ -45,7 +48,7 @@ export default function Dashboard() {
       const data = await analyticsApi.getDashboardStats(siteId);
       setStats(data);
     } catch (error: any) {
-      toast.error('Failed to load analytics');
+      toast.error(t('dashboard.failedToLoadAnalytics'));
     }
   };
 
@@ -77,9 +80,10 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Web Analytics Platform
+              {t('dashboard.title')}
             </h1>
             <div className="flex items-center gap-4">
+              <LanguageSwitcher />
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 {user?.name || user?.email}
               </span>
@@ -87,7 +91,7 @@ export default function Dashboard() {
                 onClick={logout}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
               >
-                Logout
+                {t('common.logout')}
               </button>
             </div>
           </div>
@@ -107,7 +111,7 @@ export default function Dashboard() {
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              Site Settings
+              {t('dashboard.siteSettings')}
             </button>
             <button
               onClick={() => setActiveTab('analytics')}
@@ -117,7 +121,7 @@ export default function Dashboard() {
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              Analytics
+              {t('dashboard.analytics')}
             </button>
           </div>
         </div>

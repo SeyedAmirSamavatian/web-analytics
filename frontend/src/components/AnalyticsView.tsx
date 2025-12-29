@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Site, DashboardStats } from '../types';
+import { useTranslation } from '../i18n/i18n';
 
 interface AnalyticsViewProps {
   sites: Site[];
@@ -29,6 +30,7 @@ export default function AnalyticsView({
   stats,
   onRefresh,
 }: AnalyticsViewProps) {
+  const { t } = useTranslation();
   const [autoRefresh, setAutoRefresh] = useState(true);
 
   useEffect(() => {
@@ -45,7 +47,7 @@ export default function AnalyticsView({
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
         <p className="text-gray-500 dark:text-gray-400">
-          Please select a site from Site Settings to view analytics.
+          {t('dashboard.pleaseSelectSite')}
         </p>
       </div>
     );
@@ -66,7 +68,7 @@ export default function AnalyticsView({
         <div className="flex justify-between items-center">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Select Site
+              {t('dashboard.selectSite')}
             </label>
             <select
               value={selectedSite.id}
@@ -91,13 +93,13 @@ export default function AnalyticsView({
                 onChange={(e) => setAutoRefresh(e.target.checked)}
                 className="rounded"
               />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Auto Refresh</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">{t('dashboard.autoRefresh')}</span>
             </label>
             <button
               onClick={onRefresh}
               className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
             >
-              Refresh
+              {t('common.refresh')}
             </button>
           </div>
         </div>
@@ -106,22 +108,22 @@ export default function AnalyticsView({
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Unique Visitors"
+          title={t('dashboard.uniqueVisitors')}
           value={stats.uniqueVisitors.toLocaleString()}
           icon="👥"
         />
         <StatCard
-          title="Total Visits"
+          title={t('dashboard.totalVisits')}
           value={stats.totalVisits.toLocaleString()}
           icon="📊"
         />
         <StatCard
-          title="Avg. Duration"
+          title={t('dashboard.averageDuration')}
           value={`${Math.floor(stats.avgDuration / 60)}m ${stats.avgDuration % 60}s`}
           icon="⏱️"
         />
         <StatCard
-          title="Active Users"
+          title={t('dashboard.activeUsers')}
           value={stats.activeUsers.toLocaleString()}
           icon="🔥"
         />
@@ -133,7 +135,7 @@ export default function AnalyticsView({
         animate={{ opacity: 1, y: 0 }}
         className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
       >
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Traffic Over Time</h3>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('dashboard.trafficOverTime')}</h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={stats.timeSeries}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -153,7 +155,7 @@ export default function AnalyticsView({
           animate={{ opacity: 1, x: 0 }}
           className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
         >
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Top Pages</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('dashboard.topPages')}</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={stats.topPages.slice(0, 10)}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -170,10 +172,10 @@ export default function AnalyticsView({
           animate={{ opacity: 1, x: 0 }}
           className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
         >
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Top Referrers</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('dashboard.topReferrers')}</h3>
           <div className="space-y-2">
             {stats.topReferrers.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No referrers data</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">{t('dashboard.noReferrersData')}</p>
             ) : (
               stats.topReferrers.map((ref, index) => (
                 <div

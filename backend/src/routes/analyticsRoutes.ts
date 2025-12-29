@@ -4,18 +4,19 @@ import { trackEvent, getDashboardStats } from '../controllers/analyticsControlle
 
 const router = Router();
 
-// CORS middleware for track endpoint (public endpoint)
+// CORS middleware for track endpoint (public endpoint - allows all origins)
 const corsMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const origin = req.headers.origin;
-  const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    process.env.FRONTEND_URL
-  ].filter(Boolean);
   
-  if (origin && allowedOrigins.includes(origin)) {
+  // For track endpoint, allow all origins since it's a public tracking script
+  // that can be embedded on any website
+  if (origin) {
     res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    // If no origin (like from same origin), allow it
+    res.header('Access-Control-Allow-Origin', '*');
   }
+  
   res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
   res.header('Access-Control-Max-Age', '86400');

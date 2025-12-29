@@ -19,8 +19,15 @@
     localStorage.setItem(VISITOR_ID_KEY, visitorId);
   }
   
-  // Get API endpoint (default to same origin)
-  const API_BASE = scriptTag?.getAttribute('data-api') || window.location.origin;
+  // Get API endpoint
+  // Priority: 1. data-api attribute, 2. window.location.origin (same origin)
+  let API_BASE = scriptTag?.getAttribute('data-api');
+  if (!API_BASE) {
+    // Use same origin by default
+    API_BASE = window.location.origin;
+  }
+  // Remove trailing slash if exists
+  API_BASE = API_BASE.replace(/\/$/, '');
   const TRACK_ENDPOINT = `${API_BASE}/api/analytics/track`;
   
   // Track page view

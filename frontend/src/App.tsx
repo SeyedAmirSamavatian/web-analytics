@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore';
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
+import HomePage from './pages/HomePage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
@@ -25,6 +26,7 @@ function App() {
   return (
     <>
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<AuthPage />} />
         <Route path="/register" element={<AuthPage />} />
         <Route
@@ -35,7 +37,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       <Toaster position="top-right" />
     </>

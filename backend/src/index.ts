@@ -5,7 +5,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
 import { connectMySQL } from './database/mysql';
-import { connectClickHouse } from './database/clickhouse';
+import { connectClickHouse, isClickHouseAvailable } from './database/clickhouse';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import authRoutes from './routes/authRoutes';
 import siteRoutes from './routes/siteRoutes';
@@ -63,7 +63,22 @@ app.use('/api/analytics', analyticsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    clickhouse: isClickHouseAvailable()
+  });
+});
+
+// Health check for API
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    clickhouse: isClickHouseAvailable()
+  });
 });
 
 // Error handling

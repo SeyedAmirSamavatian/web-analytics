@@ -5,6 +5,7 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 import { Site } from '../types';
 import { sitesApi } from '../api/sites';
 import toast from 'react-hot-toast';
+import { useTranslation } from '../i18n/i18n';
 
 interface SiteSettingsProps {
   sites: Site[];
@@ -23,6 +24,7 @@ export default function SiteSettings({
   onSiteDeleted,
   loading,
 }: SiteSettingsProps) {
+  const { t } = useTranslation();
   const [url, setUrl] = useState('');
   const [adding, setAdding] = useState(false);
 
@@ -32,11 +34,11 @@ export default function SiteSettings({
 
     try {
       const response = await sitesApi.addSite({ url });
-      toast.success('Site added successfully!');
+      toast.success(t('dashboard.siteAddedSuccessfully'));
       setUrl('');
       onSiteAdded(response.site);
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to add site');
+      toast.error(error.response?.data?.error || t('dashboard.failedToLoadSites'));
     } finally {
       setAdding(false);
     }
@@ -44,29 +46,29 @@ export default function SiteSettings({
 
   const copyTrackingKey = (key: string) => {
     navigator.clipboard.writeText(key);
-    toast.success('Tracking key copied!');
+    toast.success(t('dashboard.trackingKeyCopied'));
   };
 
   const handleDeleteSite = async (site: Site) => {
     const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: `Do you want to delete the site "${site.url}"? This action cannot be undone and all data related to this site will be permanently deleted.`,
+      title: t('siteSettings.areYouSure'),
+      text: t('siteSettings.deleteConfirm', { url: site.url }),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc2626',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, delete it',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: t('siteSettings.yesDelete'),
+      cancelButtonText: t('common.cancel'),
       reverseButtons: true,
     });
 
     if (result.isConfirmed) {
       try {
         await sitesApi.deleteSite(site.id);
-        toast.success('Site deleted successfully');
+        toast.success(t('siteSettings.siteDeletedSuccessfully'));
         onSiteDeleted(site.id);
       } catch (error: any) {
-        toast.error(error.response?.data?.error || 'Failed to delete site');
+        toast.error(error.response?.data?.error || t('siteSettings.failedToDeleteSite'));
       }
     }
   };
@@ -87,11 +89,11 @@ export default function SiteSettings({
         animate={{ opacity: 1, y: 0 }}
         className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
       >
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Add New Site</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t('dashboard.addNewSite')}</h2>
         <form onSubmit={handleAddSite} className="space-y-4">
           <div>
             <label htmlFor="url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Site URL
+              {t('dashboard.siteUrl')}
             </label>
             <input
               id="url"
@@ -108,17 +110,17 @@ export default function SiteSettings({
             disabled={adding}
             className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50"
           >
-            {adding ? 'Adding...' : 'Add Site'}
+            {adding ? t('dashboard.adding') : t('dashboard.addSite')}
           </button>
         </form>
       </motion.div>
 
       {/* Sites List */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Your Sites</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t('dashboard.yourSites')}</h2>
         {sites.length === 0 ? (
           <p className="text-gray-500 dark:text-gray-400 text-center py-8">
-            No sites added yet. Add your first site above!
+            {t('dashboard.noSitesYet')}
           </p>
         ) : (
           <div className="space-y-4">
@@ -137,7 +139,7 @@ export default function SiteSettings({
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{site.url}</h3>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Tracking Key:</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard.trackingKey')}:</span>
                       <code className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
                         {site.trackingKey}
                       </code>
@@ -145,15 +147,21 @@ export default function SiteSettings({
                         onClick={() => copyTrackingKey(site.trackingKey)}
                         className="text-primary-600 hover:text-primary-700 text-sm font-medium"
                       >
-                        Copy
+                        {t('common.copy')}
                       </button>
                     </div>
                     <div className="mt-3 bg-gray-50 dark:bg-gray-900 p-3 rounded">
                       <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                        Add this script to your website:
+                        {t('dashboard.addThisScript')}
                       </p>
                       <code className="text-xs text-gray-800 dark:text-gray-200 block break-all">
-                        {`<script src="${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/tracker.js" data-key="${site.trackingKey}"></script>`}
+                        {(() => {
+                          const frontendUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+                          const backendUrl = import.meta.env.VITE_API_URL || '';
+                          const scriptUrl = `${frontendUrl}/tracker.js`;
+                          const dataApiAttr = backendUrl ? ` data-api="${backendUrl}"` : '';
+                          return `<script src="${scriptUrl}" data-key="${site.trackingKey}"${dataApiAttr}></script>`;
+                        })()}
                       </code>
                     </div>
                   </div>
@@ -166,14 +174,14 @@ export default function SiteSettings({
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                       }`}
                     >
-                      {selectedSite?.id === site.id ? 'Selected' : 'Select'}
+                      {selectedSite?.id === site.id ? t('common.selected') : t('common.select')}
                     </button>
                     <button
                       onClick={() => handleDeleteSite(site)}
                       className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
-                      title="Delete site"
+                      title={t('siteSettings.deleteSite')}
                     >
-                      Delete
+                      {t('common.delete')}
                     </button>
                   </div>
                 </div>

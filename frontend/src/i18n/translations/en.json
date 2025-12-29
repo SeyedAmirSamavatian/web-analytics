@@ -1,0 +1,111 @@
+{
+  "common": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "home": "Home",
+    "getStarted": "Get Started",
+    "signIn": "Sign In",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "select": "Select",
+    "selected": "Selected",
+    "copy": "Copy",
+    "refresh": "Refresh",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "home": {
+    "title": "Powerful Web Analytics Made Simple",
+    "subtitle": "Track your website visitors, understand user behavior, and make data-driven decisions with our comprehensive analytics platform.",
+    "startFreeTrial": "Start Free Trial",
+    "createFreeAccount": "Create Free Account",
+    "readyToGetStarted": "Ready to Get Started?",
+    "joinThousands": "Join thousands of websites using our analytics platform to grow their business.",
+    "everythingYouNeed": "Everything You Need",
+    "allTheTools": "All the tools you need to understand and grow your website traffic",
+    "features": {
+      "realtime": {
+        "title": "Real-time Analytics",
+        "description": "Track your website visitors in real-time with detailed insights and statistics."
+      },
+      "fast": {
+        "title": "Fast & Reliable",
+        "description": "Built with modern technologies for speed and reliability."
+      },
+      "secure": {
+        "title": "Secure & Private",
+        "description": "Your data is secure and private. We respect your privacy."
+      },
+      "reports": {
+        "title": "Detailed Reports",
+        "description": "Get comprehensive reports about your website traffic and user behavior."
+      },
+      "integration": {
+        "title": "Easy Integration",
+        "description": "Simple one-line script to add tracking to your website."
+      },
+      "insights": {
+        "title": "Smart Insights",
+        "description": "AI-powered insights to help you understand your audience better."
+      }
+    },
+    "copyright": "© 2025 Web Analytics Platform. All rights reserved."
+  },
+  "auth": {
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "yourName": "Your Name",
+    "yourEmail": "your@email.com",
+    "processing": "Processing...",
+    "loginSuccessful": "Login successful!",
+    "registrationSuccessful": "Registration successful!",
+    "anErrorOccurred": "An error occurred"
+  },
+  "dashboard": {
+    "title": "Web Analytics Platform",
+    "siteSettings": "Site Settings",
+    "analytics": "Analytics",
+    "addNewSite": "Add New Site",
+    "siteUrl": "Site URL",
+    "addSite": "Add Site",
+    "adding": "Adding...",
+    "yourSites": "Your Sites",
+    "noSitesYet": "No sites added yet. Add your first site above!",
+    "trackingKey": "Tracking Key",
+    "addThisScript": "Add this script to your website:",
+    "siteAddedSuccessfully": "Site added successfully!",
+    "trackingKeyCopied": "Tracking key copied!",
+    "failedToLoadSites": "Failed to load sites",
+    "failedToLoadAnalytics": "Failed to load analytics",
+    "uniqueVisitors": "Unique Visitors",
+    "totalVisits": "Total Visits",
+    "averageDuration": "Average Duration",
+    "activeUsers": "Active Users",
+    "topPages": "Top Pages",
+    "topReferrers": "Top Referrers",
+    "visits": "Visits",
+    "pageUrl": "Page URL",
+    "referrer": "Referrer",
+    "selectSite": "Select Site",
+    "autoRefresh": "Auto Refresh",
+    "trafficOverTime": "Traffic Over Time",
+    "noReferrersData": "No referrers data",
+    "pleaseSelectSite": "Please select a site from Site Settings to view analytics."
+  },
+  "siteSettings": {
+    "deleteSite": "Delete Site",
+    "areYouSure": "Are you sure?",
+    "deleteConfirm": "Do you want to delete the site \"{{url}}\"? This action cannot be undone and all data related to this site will be permanently deleted.",
+    "yesDelete": "Yes, delete it",
+    "siteDeletedSuccessfully": "Site deleted successfully",
+    "failedToDeleteSite": "Failed to delete site"
+  }
+}
+

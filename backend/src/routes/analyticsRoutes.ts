@@ -29,7 +29,14 @@ const corsMiddleware = (req: Request, res: Response, next: NextFunction) => {
 };
 
 // Track endpoint doesn't need auth (public tracking)
+// Handle both POST and GET (GET will return error message for debugging)
 router.post('/track', corsMiddleware, trackEvent);
+router.get('/track', corsMiddleware, (req, res) => {
+  res.status(405).json({ 
+    error: 'Method not allowed. Use POST to track events.',
+    message: 'The track endpoint only accepts POST requests. Please use POST method.'
+  });
+});
 
 // Dashboard endpoint requires authentication
 router.get('/dashboard/:siteId', authenticate, getDashboardStats);

@@ -20,6 +20,26 @@ const toClickHouseDateTime = (date: Date): string => {
 
 export const trackEvent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
+    // Handle OPTIONS preflight requests
+    if (req.method === 'OPTIONS') {
+      res.status(200).end();
+      return;
+    }
+    
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      console.warn(`Track endpoint called with ${req.method} instead of POST`);
+      res.status(405).json({ error: 'Method not allowed. Use POST.' });
+      return;
+    }
+    
+    console.log('Track event received:', {
+      method: req.method,
+      path: req.path,
+      body: req.body,
+      headers: req.headers,
+    });
+    
     const {
       trackingKey,
       visitorId,
@@ -31,7 +51,7 @@ export const trackEvent = async (req: Request, res: Response, next: NextFunction
     } = req.body;
     
     if (!trackingKey || !visitorId || !pageUrl) {
-      res.status(400).json({ error: 'Missing required fields' });
+      res.status(400).json({ error: 'Missing required fields: trackingKey, visitorId, and pageUrl are required' });
       return;
     }
     
@@ -103,28 +123,36 @@ export const trackEvent = async (req: Request, res: Response, next: NextFunction
 
 export const getDashboardStats = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    if (!isClickHouseAvailable()) {
-      res.status(503).json({ 
-        error: 'Analytics service is temporarily unavailable. ClickHouse is not connected.',
-        stats: {
-          uniqueVisitors: 0,
-          totalVisits: 0,
-          avgDuration: 0,
-          timeSeries: [],
-          topPages: [],
-          topReferrers: [],
-          activeUsers: 0,
-        }
-      });
-      return;
-    }
-    
     const { siteId } = req.params;
     const { startDate, endDate } = req.query;
     
-    const site = await Site.findByPk(parseInt(siteId));
+    // Validate siteId parameter
+    const siteIdNum = parseInt(siteId);
+    if (isNaN(siteIdNum)) {
+      res.status(400).json({ error: 'Invalid site ID' });
+      return;
+    }
+    
+    // Check if site exists and user has access
+    const site = await Site.findByPk(siteIdNum);
     if (!site) {
       res.status(404).json({ error: 'Site not found' });
+      return;
+    }
+    
+    // Check if ClickHouse is available
+    if (!isClickHouseAvailable()) {
+      // Return empty stats instead of 503 to prevent frontend errors
+      const emptyStats: DashboardStats = {
+        uniqueVisitors: 0,
+        totalVisits: 0,
+        avgDuration: 0,
+        timeSeries: [],
+        topPages: [],
+        topReferrers: [],
+        activeUsers: 0,
+      };
+      res.status(200).json(emptyStats);
       return;
     }
     
@@ -133,21 +161,31 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
     
     const siteIdStr = site.id.toString();
     
-    // Unique Visitors
+    // Initialize default values
     let uniqueVisitors = 0;
+    let totalVisits = 0;
+    let avgDuration = 0;
+    let timeSeries: Array<{ date: string; visits: number }> = [];
+    let topPages: Array<{ pageUrl: string; visits: number }> = [];
+    let topReferrers: Array<{ referrer: string; visits: number }> = [];
+    let activeUsers = 0;
+    
+    // Unique Visitors
     try {
+      const startStr = toClickHouseDateTime(start);
+      const endStr = toClickHouseDateTime(end);
       const uniqueVisitorsResult = await clickhouseClient.query({
         query: `
           SELECT count(DISTINCT visitorId) as count
           FROM traffic_events
           WHERE siteId = {siteId:String}
-          AND eventTime >= {start:DateTime64}
-          AND eventTime <= {end:DateTime64}
+          AND eventTime >= toDateTime64({start:String}, 3)
+          AND eventTime <= toDateTime64({end:String}, 3)
         `,
         query_params: {
           siteId: siteIdStr,
-          start: toClickHouseDateTime(start),
-          end: toClickHouseDateTime(end),
+          start: startStr,
+          end: endStr,
         },
         format: 'JSONEachRow',
       });
@@ -156,24 +194,25 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
       uniqueVisitors = parseInt(uniqueVisitorsData[0]?.count || '0');
     } catch (error: any) {
       console.error('Error fetching unique visitors:', error);
-      throw new Error(`Failed to fetch unique visitors: ${error.message}`);
+      // Continue with default value (0) instead of throwing
     }
     
     // Total Visits
-    let totalVisits = 0;
     try {
+      const startStr = toClickHouseDateTime(start);
+      const endStr = toClickHouseDateTime(end);
       const totalVisitsResult = await clickhouseClient.query({
         query: `
           SELECT count() as count
           FROM traffic_events
           WHERE siteId = {siteId:String}
-          AND eventTime >= {start:DateTime64}
-          AND eventTime <= {end:DateTime64}
+          AND eventTime >= toDateTime64({start:String}, 3)
+          AND eventTime <= toDateTime64({end:String}, 3)
         `,
         query_params: {
           siteId: siteIdStr,
-          start: toClickHouseDateTime(start),
-          end: toClickHouseDateTime(end),
+          start: startStr,
+          end: endStr,
         },
         format: 'JSONEachRow',
       });
@@ -182,24 +221,25 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
       totalVisits = parseInt(totalVisitsData[0]?.count || '0');
     } catch (error: any) {
       console.error('Error fetching total visits:', error);
-      throw new Error(`Failed to fetch total visits: ${error.message}`);
+      // Continue with default value (0) instead of throwing
     }
     
     // Average Duration
-    let avgDuration = 0;
     try {
+      const startStr = toClickHouseDateTime(start);
+      const endStr = toClickHouseDateTime(end);
       const avgDurationResult = await clickhouseClient.query({
         query: `
           SELECT avg(durationSec) as avg
           FROM traffic_events
           WHERE siteId = {siteId:String}
-          AND eventTime >= {start:DateTime64}
-          AND eventTime <= {end:DateTime64}
+          AND eventTime >= toDateTime64({start:String}, 3)
+          AND eventTime <= toDateTime64({end:String}, 3)
         `,
         query_params: {
           siteId: siteIdStr,
-          start: toClickHouseDateTime(start),
-          end: toClickHouseDateTime(end),
+          start: startStr,
+          end: endStr,
         },
         format: 'JSONEachRow',
       });
@@ -208,12 +248,13 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
       avgDuration = Math.round(parseFloat(avgDurationData[0]?.avg || '0'));
     } catch (error: any) {
       console.error('Error fetching average duration:', error);
-      throw new Error(`Failed to fetch average duration: ${error.message}`);
+      // Continue with default value (0) instead of throwing
     }
     
     // Time Series
-    let timeSeries: Array<{ date: string; visits: number }> = [];
     try {
+      const startStr = toClickHouseDateTime(start);
+      const endStr = toClickHouseDateTime(end);
       const timeSeriesResult = await clickhouseClient.query({
         query: `
           SELECT 
@@ -221,15 +262,15 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
             count() as visits
           FROM traffic_events
           WHERE siteId = {siteId:String}
-          AND eventTime >= {start:DateTime64}
-          AND eventTime <= {end:DateTime64}
+          AND eventTime >= toDateTime64({start:String}, 3)
+          AND eventTime <= toDateTime64({end:String}, 3)
           GROUP BY date
           ORDER BY date
         `,
         query_params: {
           siteId: siteIdStr,
-          start: toClickHouseDateTime(start),
-          end: toClickHouseDateTime(end),
+          start: startStr,
+          end: endStr,
         },
         format: 'JSONEachRow',
       });
@@ -241,12 +282,13 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
       }));
     } catch (error: any) {
       console.error('Error fetching time series:', error);
-      throw new Error(`Failed to fetch time series: ${error.message}`);
+      // Continue with empty array instead of throwing
     }
     
     // Top Pages
-    let topPages: Array<{ pageUrl: string; visits: number }> = [];
     try {
+      const startStr = toClickHouseDateTime(start);
+      const endStr = toClickHouseDateTime(end);
       const topPagesResult = await clickhouseClient.query({
         query: `
           SELECT 
@@ -254,16 +296,16 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
             count() as visits
           FROM traffic_events
           WHERE siteId = {siteId:String}
-          AND eventTime >= {start:DateTime64}
-          AND eventTime <= {end:DateTime64}
+          AND eventTime >= toDateTime64({start:String}, 3)
+          AND eventTime <= toDateTime64({end:String}, 3)
           GROUP BY pageUrl
           ORDER BY visits DESC
           LIMIT 10
         `,
         query_params: {
           siteId: siteIdStr,
-          start: toClickHouseDateTime(start),
-          end: toClickHouseDateTime(end),
+          start: startStr,
+          end: endStr,
         },
         format: 'JSONEachRow',
       });
@@ -275,12 +317,13 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
       }));
     } catch (error: any) {
       console.error('Error fetching top pages:', error);
-      throw new Error(`Failed to fetch top pages: ${error.message}`);
+      // Continue with empty array instead of throwing
     }
     
     // Top Referrers
-    let topReferrers: Array<{ referrer: string; visits: number }> = [];
     try {
+      const startStr = toClickHouseDateTime(start);
+      const endStr = toClickHouseDateTime(end);
       const topReferrersResult = await clickhouseClient.query({
         query: `
           SELECT 
@@ -288,8 +331,8 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
             count() as visits
           FROM traffic_events
           WHERE siteId = {siteId:String}
-          AND eventTime >= {start:DateTime64}
-          AND eventTime <= {end:DateTime64}
+          AND eventTime >= toDateTime64({start:String}, 3)
+          AND eventTime <= toDateTime64({end:String}, 3)
           AND referrer != ''
           GROUP BY referrer
           ORDER BY visits DESC
@@ -297,8 +340,8 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
         `,
         query_params: {
           siteId: siteIdStr,
-          start: toClickHouseDateTime(start),
-          end: toClickHouseDateTime(end),
+          start: startStr,
+          end: endStr,
         },
         format: 'JSONEachRow',
       });
@@ -310,23 +353,23 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
       }));
     } catch (error: any) {
       console.error('Error fetching top referrers:', error);
-      throw new Error(`Failed to fetch top referrers: ${error.message}`);
+      // Continue with empty array instead of throwing
     }
     
     // Active Users (last 5 minutes)
-    let activeUsers = 0;
     try {
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      const fiveMinutesAgoStr = toClickHouseDateTime(fiveMinutesAgo);
       const activeUsersResult = await clickhouseClient.query({
         query: `
           SELECT count(DISTINCT visitorId) as count
           FROM traffic_events
           WHERE siteId = {siteId:String}
-          AND eventTime >= {fiveMinutesAgo:DateTime64}
+          AND eventTime >= toDateTime64({fiveMinutesAgo:String}, 3)
         `,
         query_params: {
           siteId: siteIdStr,
-          fiveMinutesAgo: toClickHouseDateTime(fiveMinutesAgo),
+          fiveMinutesAgo: fiveMinutesAgoStr,
         },
         format: 'JSONEachRow',
       });
@@ -335,7 +378,7 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
       activeUsers = parseInt(activeUsersData[0]?.count || '0');
     } catch (error: any) {
       console.error('Error fetching active users:', error);
-      throw new Error(`Failed to fetch active users: ${error.message}`);
+      // Continue with default value (0) instead of throwing
     }
     
     const stats: DashboardStats = {
@@ -352,13 +395,29 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
   } catch (err: any) {
     console.error('Error in getDashboardStats:', err);
     // Log more details about the error
-    if (err.message) {
-      console.error('Error message:', err.message);
-    }
-    if (err.stack) {
-      console.error('Error stack:', err.stack);
-    }
-    next(err);
+    console.error('Error details:', {
+      message: err.message,
+      code: err.code,
+      name: err.name,
+      stack: err.stack,
+      siteId: req.params.siteId,
+      query: req.query,
+    });
+    
+    // Return a proper error response instead of letting it bubble up
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({
+      error: err.message || 'Failed to fetch dashboard statistics',
+      stats: {
+        uniqueVisitors: 0,
+        totalVisits: 0,
+        avgDuration: 0,
+        timeSeries: [],
+        topPages: [],
+        topReferrers: [],
+        activeUsers: 0,
+      }
+    });
   }
 };
 

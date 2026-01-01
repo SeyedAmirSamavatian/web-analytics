@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { sitesApi } from '../api/sites';
 import { analyticsApi } from '../api/analytics';
@@ -121,12 +122,23 @@ export default function Dashboard() {
               <LanguageSwitcher />
               <div className="text-sm text-white/80 flex flex-col items-end gap-1">
                 <span>{user?.name || user?.email}</span>
-                <button
-                  onClick={logout}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-400 rounded-xl font-semibold transition"
-                >
-                  {t('common.logout')}
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={logout}
+                    className="px-4 py-2 bg-red-500 hover:bg-red-400 rounded-xl font-semibold transition"
+                  >
+                    {t('common.logout')}
+                  </button>
+                  {user?.email === 'mr.smvtn@gmail.com' && (
+                    <Link
+                      to="/admin"
+                      className="px-4 py-2 bg-white/10 border border-white/30 rounded-xl text-sm font-semibold
+                        hover:bg-white/20 transition"
+                    >
+                      {t('admin.title')}
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
           </div>

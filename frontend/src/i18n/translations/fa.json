@@ -135,5 +135,33 @@
     "siteDeletedSuccessfully": "سایت با موفقیت حذف شد",
     "failedToDeleteSite": "حذف سایت ناموفق بود"
   }
+  ,
+  "admin": {
+    "title": "کنسول ادمین",
+    "subtitle": "نمایی جامع از کاربران و سایت‌های ثبت‌شده در پلتفرم.",
+    "tagline": "بینش مدیریتی",
+    "totalUsers": "کاربران",
+    "totalSites": "سایت‌ها",
+    "latestUsersTitle": "آخرین کاربران",
+    "latestUsersSubtitle": "تازه‌ترین ثبت‌نام‌ها",
+    "latestUsersDescription": "ثبت‌نام‌ها و وضعیت آن‌ها را بررسی کنید.",
+    "latestSitesTitle": "آخرین سایت‌ها",
+    "latestSitesSubtitle": "کلیدهای ردیابی جدید",
+    "latestSitesDescription": "سایت‌های تازه اضافه‌شده و مالک آن‌ها را ببینید.",
+    "user": "کاربر",
+    "email": "ایمیل",
+    "status": "وضعیت",
+    "created": "ایجاد شده",
+    "proUser": "پرو",
+    "freeUser": "رایگان",
+    "trackingKey": "کلید ردیابی",
+    "owner": "مالک",
+    "unknownOwner": "نامشخص",
+    "siteId": "شناسه سایت",
+    "failedToLoad": "داده‌های ادمین بارگذاری نشد",
+    "accessDenied": "دسترسی محدود شده",
+    "onlyAdmin": "فقط ادمین مجاز به دیدن این صفحه است.",
+    "backToDashboard": "بازگشت به داشبورد"
+  }
 }
 

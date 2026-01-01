@@ -29,3 +29,33 @@ export interface DashboardStats {
   deviceBreakdown: Array<{ label: string; visits: number }>;
 }
 
+export interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  isPro: boolean;
+  proExpiryDate: Date | null;
+  createdAt: Date;
+}
+
+export interface AdminSiteOwner {
+  id: number;
+  name: string;
+  email: string;
+}
+
+export interface AdminSite {
+  id: number;
+  url: string;
+  trackingKey: string;
+  createdAt: Date;
+  user: AdminSiteOwner | null;
+}
+
+export interface AdminOverview {
+  totalUsers: number;
+  totalSites: number;
+  latestUsers: AdminUser[];
+  latestSites: AdminSite[];
+}
+

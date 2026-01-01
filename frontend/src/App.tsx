@@ -1,26 +1,10 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { useAuthStore } from './store/authStore';
+import ProtectedRoute from './components/ProtectedRoute';
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import HomePage from './pages/HomePage';
-
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const user = useAuthStore((state) => state.user);
-  const token = useAuthStore((state) => state.token);
-  
-  // Check both zustand store and localStorage as fallback
-  const tokenFromStorage = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  const userFromStorage = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-  
-  const isAuthenticated = !!(user && token) || !!(tokenFromStorage && userFromStorage);
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
-}
+import AdminPage from './pages/AdminPage';
 
 function App() {
   return (
@@ -34,6 +18,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminPage />
             </ProtectedRoute>
           }
         />

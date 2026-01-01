@@ -135,5 +135,33 @@
     "siteDeletedSuccessfully": "Site deleted successfully",
     "failedToDeleteSite": "Failed to delete site"
   }
+  ,
+  "admin": {
+    "title": "Admin Console",
+    "subtitle": "Quick operating view of every registered account and site on this platform.",
+    "tagline": "Platform insight",
+    "totalUsers": "Users",
+    "totalSites": "Sites",
+    "latestUsersTitle": "Latest Users",
+    "latestUsersSubtitle": "Most recent signups",
+    "latestUsersDescription": "Monitor registrations and their status.",
+    "latestSitesTitle": "Latest Sites",
+    "latestSitesSubtitle": "Newest tracking keys",
+    "latestSitesDescription": "Inspect newly onboarded sites and their owners.",
+    "user": "User",
+    "email": "Email",
+    "status": "Status",
+    "created": "Created",
+    "proUser": "Pro",
+    "freeUser": "Free",
+    "trackingKey": "Tracking Key",
+    "owner": "Owner",
+    "unknownOwner": "N/A",
+    "siteId": "Site ID",
+    "failedToLoad": "Unable to load admin data",
+    "accessDenied": "Access restricted",
+    "onlyAdmin": "Only the designated admin may view this page.",
+    "backToDashboard": "Go back to Dashboard"
+  }
 }
 

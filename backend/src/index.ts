@@ -10,6 +10,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import authRoutes from './routes/authRoutes';
 import siteRoutes from './routes/siteRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
+import adminRoutes from './routes/adminRoutes';
 
 dotenv.config();
 
@@ -60,6 +61,7 @@ app.set('trust proxy', true);
 app.use('/api/auth', authRoutes);
 app.use('/api/user/site', siteRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

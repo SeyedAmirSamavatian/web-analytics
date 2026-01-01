@@ -9,7 +9,7 @@ interface Translations {
 interface I18nContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string, params?: Record<string, string>) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
   dir: 'ltr' | 'rtl';
 }
 
@@ -42,7 +42,7 @@ export const I18nProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     document.documentElement.dir = language === 'fa' ? 'rtl' : 'ltr';
   }, [language]);
 
-  const t = (key: string, params?: Record<string, string>): string => {
+  const t = (key: string, params?: Record<string, string | number>): string => {
     const keys = key.split('.');
     let value: any = translations[language];
 
@@ -66,7 +66,8 @@ export const I18nProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Replace parameters
     if (params) {
       return value.replace(/\{\{(\w+)\}\}/g, (match, paramKey) => {
-        return params[paramKey] || match;
+        const paramValue = params[paramKey];
+        return paramValue !== undefined ? String(paramValue) : match;
       });
     }
 

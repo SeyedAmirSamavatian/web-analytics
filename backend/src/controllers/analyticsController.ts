@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { clickhouseClient, isClickHouseAvailable } from '../database/clickhouse';
 import { Site } from '../models/Site';
-import { TrackEventData, DashboardStats } from '../types';
-import { AppError } from '../middleware/errorHandler';
+import { DashboardStats } from '../types';
+import UAParser from 'ua-parser-js';
 
 // Helper function to convert Date to ClickHouse DateTime64 format
 // ClickHouse expects format: 'YYYY-MM-DD HH:MM:SS.mmm' without timezone
@@ -151,6 +151,9 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
         topPages: [],
         topReferrers: [],
         activeUsers: 0,
+        browserBreakdown: [],
+        osBreakdown: [],
+        deviceBreakdown: [],
       };
       res.status(200).json(emptyStats);
       return;
@@ -169,6 +172,9 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
     let topPages: Array<{ pageUrl: string; visits: number }> = [];
     let topReferrers: Array<{ referrer: string; visits: number }> = [];
     let activeUsers = 0;
+    let browserBreakdown: Array<{ label: string; visits: number }> = [];
+    let osBreakdown: Array<{ label: string; visits: number }> = [];
+    let deviceBreakdown: Array<{ label: string; visits: number }> = [];
     
     // Unique Visitors
     try {
@@ -380,6 +386,74 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
       console.error('Error fetching active users:', error);
       // Continue with default value (0) instead of throwing
     }
+
+    // Browser / OS / Device breakdown
+    try {
+      const startStr = toClickHouseDateTime(start);
+      const endStr = toClickHouseDateTime(end);
+      const userAgentResult = await clickhouseClient.query({
+        query: `
+          SELECT
+            userAgent,
+            count() as visits
+          FROM traffic_events
+          WHERE siteId = {siteId:String}
+            AND eventTime >= toDateTime64({start:String}, 3)
+            AND eventTime <= toDateTime64({end:String}, 3)
+          GROUP BY userAgent
+          ORDER BY visits DESC
+          LIMIT 50
+        `,
+        query_params: {
+          siteId: siteIdStr,
+          start: startStr,
+          end: endStr,
+        },
+        format: 'JSONEachRow',
+      });
+
+      const userAgentData = (await userAgentResult.json()) as any[];
+      const browserMap = new Map<string, number>();
+      const osMap = new Map<string, number>();
+      const deviceMap = new Map<string, number>();
+      const parser = new UAParser.UAParser();
+
+      const accumulate = (map: Map<string, number>, label: string, count: number) => {
+        map.set(label, (map.get(label) || 0) + count);
+      };
+
+      userAgentData.forEach((row) => {
+        const visits = Math.max(0, parseInt(row.visits || '0', 10));
+        if (visits === 0) {
+          return;
+        }
+        const ua = typeof row.userAgent === 'string' && row.userAgent.trim().length > 0 ? row.userAgent : 'Unknown';
+
+        parser.setUA(ua);
+        const { browser, os, device } = parser.getResult();
+
+        const browserName = browser.name ? browser.name : 'Unknown Browser';
+        const browserLabel = browser.major ? `${browserName} ${browser.major}` : browserName;
+        const osLabel = os.name ? `${os.name}${os.version ? ` ${os.version.split('.')[0]}` : ''}` : 'Unknown OS';
+        const deviceType = device.type ? `${device.type.charAt(0).toUpperCase()}${device.type.slice(1)}` : 'Desktop';
+
+        accumulate(browserMap, browserLabel, visits);
+        accumulate(osMap, osLabel, visits);
+        accumulate(deviceMap, deviceType, visits);
+      });
+
+      const mapToArray = (map: Map<string, number>) =>
+        Array.from(map.entries())
+          .sort((a, b) => b[1] - a[1])
+          .map(([label, visits]) => ({ label, visits }));
+
+      browserBreakdown = mapToArray(browserMap).slice(0, 6);
+      osBreakdown = mapToArray(osMap).slice(0, 6);
+      deviceBreakdown = mapToArray(deviceMap).slice(0, 6);
+    } catch (error: any) {
+      console.error('Error fetching user-agent breakdown:', error);
+      // Continue with empty arrays
+    }
     
     const stats: DashboardStats = {
       uniqueVisitors,
@@ -389,6 +463,9 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
       topPages,
       topReferrers,
       activeUsers,
+      browserBreakdown,
+      osBreakdown,
+      deviceBreakdown,
     };
     
     res.json(stats);
@@ -416,6 +493,9 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
         topPages: [],
         topReferrers: [],
         activeUsers: 0,
+        browserBreakdown: [],
+        osBreakdown: [],
+        deviceBreakdown: [],
       }
     });
   }

@@ -24,5 +24,8 @@ export interface DashboardStats {
   topPages: Array<{ pageUrl: string; visits: number }>;
   topReferrers: Array<{ referrer: string; visits: number }>;
   activeUsers: number;
+  browserBreakdown: Array<{ label: string; visits: number }>;
+  osBreakdown: Array<{ label: string; visits: number }>;
+  deviceBreakdown: Array<{ label: string; visits: number }>;
 }
 
